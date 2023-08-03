@@ -1,8 +1,6 @@
-// app.js
 
 require('dotenv').config();
 const express = require('express');
-const { AuthenticationClient } = require('auth0');
 
 const app = express();
 const port = 3000;
@@ -43,6 +41,51 @@ app.get('/auth/linkedin', async (req, res) => {
 
     // Devolver la URL de autenticación al front-end
     res.json({ url: authorizeUrl });
+  } catch (error) {
+    console.error('Error:', error.message);
+    res.status(500).json({ error: 'Error al generar la URL de autenticación' });
+  }
+});
+
+
+app.get('/auth/callback', async (req, res) => {
+  try {
+    const code = req.query.code;
+
+    // Intercambiar el código de autorización por un token de acceso usando la API de Auth0
+    const tokenResponse = await fetch(`https://${auth0Domain}/oauth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: auth0ClientId,
+        client_secret: auth0ClientSecret,
+        redirect_uri: auth0RedirectUri,
+        code,
+        grant_type: 'authorization_code',
+      }),
+    });
+    const tokenData = await tokenResponse.json();
+
+    // Usar el token de acceso para obtener información del usuario
+    const userInfoResponse = await fetch(`https://${auth0Domain}/userinfo`, {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const userInfo = await userInfoResponse.json();
+
+    return res.json({
+      profile: userInfo,
+      access_token: "access_token",
+      refresh_token: "refresh_token"
+    })
+
+  } catch (error) {
+    console.error('Error:', error.message);
+    res.status(500).json({ error: 'Error al generar la URL de autenticación' });
+  }
+});
+app.get('/', async (req, res) => {
+  try {
+    res.json({ url: "hello world!" });
   } catch (error) {
     console.error('Error:', error.message);
     res.status(500).json({ error: 'Error al generar la URL de autenticación' });
