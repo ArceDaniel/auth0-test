@@ -3,7 +3,7 @@ const express = require('express');
 const axios = require('axios');
 
 const app = express();
-const port = 3000;
+const port = 5435;
 
 // Configurar el cliente de Auth0
 const auth0Domain = process.env.AUTH0_DOMAIN;
